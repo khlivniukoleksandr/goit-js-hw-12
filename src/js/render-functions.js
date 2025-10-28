@@ -5,6 +5,7 @@ const listImg = document.querySelector('.gallery');
 const loader = document.querySelector('.loader');
 const loadButton = document.querySelector('.load-more-button');
 
+loader.classList.add('hidden');
 const createMarkup = ({
   webformatURL,
   largeImageURL,
