@@ -17,52 +17,42 @@ let page = 1;
 let currentQuery = '';
 
 //
-const fetchImages = (query, page) => {
+const fetchImages = async (query, page) => {
   showLoader();
-  getImagesByQuery(query, page)
-    .then(data => {
-      console.log(data);
-      if (data.hits.length === 0) {
-        iziToast.error({
-          message:
-            'Sorry, there are no images matching your search query. Please try again!',
-          position: 'topRight',
-        });
-        return;
-      }
-      createGallery(data.hits);
+  try {
+    const data = await getImagesByQuery(query, page);
+    console.log(data);
 
-      const firstCard = document.querySelector('.gallery-item');
-      if (firstCard) {
-        const cardHeight = firstCard.getBoundingClientRect().height;
-        window.scrollBy({
-          top: cardHeight * 3,
-          behavior: 'smooth',
-        });
-      }
-
-      const totalPages = Math.ceil(data.totalHits / PER_PAGE);
-      if (page >= totalPages) {
-        loadButton.classList.add('hidden');
-        iziToast.error({
-          message: "We're sorry, but you've reached the end of search results.",
-          position: 'topRight',
-        });
-      } else {
-        showButtonLoad();
-      }
-    })
-    .catch(error => {
-      console.error('Request failed:', error);
+    if (data.hits.length === 0) {
       iziToast.error({
         message:
-          'Failed to fetch images. Please check your network connection.',
+          'Sorry, there are no images matching your search query. Please try again!',
         position: 'topRight',
       });
-    })
-    .finally(() => {
-      hideLoader();
+      return;
+    }
+
+    createGallery(data.hits);
+
+    const totalPages = Math.ceil(data.totalHits / PER_PAGE);
+    if (page >= totalPages) {
+      loadButton.classList.add('hidden');
+      iziToast.error({
+        message: "We're sorry, but you've reached the end of search results.",
+        position: 'topRight',
+      });
+    } else {
+      showButtonLoad();
+    }
+  } catch (error) {
+    console.error('Request failed:', error);
+    iziToast.error({
+      message: 'Failed to fetch images. Please check your network connection.',
+      position: 'topRight',
     });
+  } finally {
+    hideLoader();
+  }
 };
 
 //
@@ -86,7 +76,16 @@ searchForm.addEventListener('submit', event => {
 });
 
 //
-loadButton.addEventListener('click', () => {
+loadButton.addEventListener('click', async () => {
   page += 1;
-  fetchImages(currentQuery, page);
+  await fetchImages(currentQuery, page);
+
+  const firstCard = document.querySelector('.gallery-item');
+  if (firstCard) {
+    const cardHeight = firstCard.getBoundingClientRect().height;
+    window.scrollBy({
+      top: cardHeight * 3,
+      behavior: 'smooth',
+    });
+  }
 });
